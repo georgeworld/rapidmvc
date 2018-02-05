@@ -1,4 +1,5 @@
 # Rapid MVC
+![image](https://raw.githubusercontent.com/georgeworld/georgeworld.github.com/master/rapidmvc/img/rapid-mvc-logo.png)
 &nbsp;&nbsp;&nbsp;&nbsp;[老乔](http://www.georgeinfo.com)当年为了给同学们讲解Web MVC的知识，花费了周末两天时间，写了这个小框架，主要目的是，给那些想学习Web MVC基础知识的同学，提供一个简单的、全流程的参考框架。<br>
   &nbsp;&nbsp;&nbsp;&nbsp; RapidMVC这个小框架，相对于目前主流的WEB MVC框架（比如Spring MVC之类的)，并没有什么优势，RapidMVC主要的设计目的，是尽量在最小依赖的前提下，提供主要的Web MVC功能（包括内置极简的IOC(DI)功能)，以便让那些对Web MVC知识感兴趣的同学，可以从基础开始，了解整个MVC的运作过程。<br>
   
