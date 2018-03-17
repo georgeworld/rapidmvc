@@ -4,6 +4,7 @@
  */
 package com.georgeinfo.rapidmvc.builtin.impl;
 
+import com.georgeinfo.base.beans.generic.KeyValueBean;
 import com.georgeinfo.rapidmvc.api.*;
 import com.georgeinfo.rapidmvc.annotation.Path;
 import com.georgeinfo.rapidmvc.annotation.Get;
@@ -21,10 +22,10 @@ import com.georgeinfo.rapidmvc.api.ResourceLoader;
 import com.georgeinfo.rapidmvc.uritree.MultiwayTree;
 import com.georgeinfo.rapidmvc.uritree.UriTreeImpl;
 import gbt.config.GeorgeLoggerFactory;
+
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
 import com.georgeinfo.rapidmvc.uritree.UriTreeCreator;
 import com.georgeinfo.rapidmvc.uritree.UriTreeNode;
 import org.apache.commons.lang3.StringUtils;
@@ -188,20 +189,20 @@ public final class DefaultPathTreeImpl implements PathTree {
 
             return r;
         } else //如果控制器登记不为空，则检查该控制器下的方法是否包含当前待登记的方法
-        if (restfullType == HttpMethodEnum.POST) {//POST方法
-            if (ci.isPostPathRegistered(methodPath)) {
-                logger.error("## RESTful-Post Method path[" + methodPath + "] has been bind to method:" + method.getName() + " of controller [" + controllerObject.getClass().getName() + "] when add path.");
-                return false;
-            } else {
-                return ci.addMethod(restfullType, methodPath, method);
-            }
-        } else//GET方法
-        if (ci.isGetPathRegistered(methodPath)) {
-            logger.error("## RESTful-Get Method path[" + methodPath + "] has been bind to method:" + method.getName() + " of controller [" + controllerObject.getClass().getName() + "] when add path.");
-            return false;
-        } else {
-            return ci.addMethod(restfullType, methodPath, method);
-        }
+            if (restfullType == HttpMethodEnum.POST) {//POST方法
+                if (ci.isPostPathRegistered(methodPath)) {
+                    logger.error("## RESTful-Post Method path[" + methodPath + "] has been bind to method:" + method.getName() + " of controller [" + controllerObject.getClass().getName() + "] when add path.");
+                    return false;
+                } else {
+                    return ci.addMethod(restfullType, methodPath, method);
+                }
+            } else//GET方法
+                if (ci.isGetPathRegistered(methodPath)) {
+                    logger.error("## RESTful-Get Method path[" + methodPath + "] has been bind to method:" + method.getName() + " of controller [" + controllerObject.getClass().getName() + "] when add path.");
+                    return false;
+                } else {
+                    return ci.addMethod(restfullType, methodPath, method);
+                }
     }
 
     @Override
@@ -213,43 +214,125 @@ public final class DefaultPathTreeImpl implements PathTree {
             pathTreeMap.put(controllerPath, ci);
 
             return r;
-        } else //如果控制器登记不为空，则检查该控制器下的方法是否包含当前待登记的方法
-        if (restfullType == HttpMethodEnum.POST) {//POST方法
-            if (ci.isPostPathRegistered(methodPath)) {
-                logger.error("## RESTful-Post Method path[" + methodPath + "] has been bind to method:" + method.getName() + " of controller [" + controllerObject.getClass().getName() + "] when add path.");
-                return false;
-            } else {
-                return ci.addMethod(restfullType, methodPath, method);
+        } else {//如果控制器登记不为空，则检查该控制器下的方法是否包含当前待登记的方法
+            if (restfullType == HttpMethodEnum.POST) {//POST方法
+                if (ci.isPostPathRegistered(methodPath)) {
+                    logger.error("## RESTful-Post Method path[" + methodPath + "] has been bind to method:" + method.getName() + " of controller [" + controllerObject.getClass().getName() + "] when add path.");
+                    return false;
+                } else {
+                    return ci.addMethod(restfullType, methodPath, method);
+                }
+            } else {//GET方法
+                if (ci.isGetPathRegistered(methodPath)) {
+                    logger.error("## RESTful-Get Method path[" + methodPath + "] has been bind to method:" + method.getName() + " of controller [" + controllerObject.getClass().getName() + "] when add path.");
+                    return false;
+                } else {
+                    return ci.addMethod(restfullType, methodPath, method);
+                }
             }
-        } else//GET方法
-        if (ci.isGetPathRegistered(methodPath)) {
-            logger.error("## RESTful-Get Method path[" + methodPath + "] has been bind to method:" + method.getName() + " of controller [" + controllerObject.getClass().getName() + "] when add path.");
-            return false;
-        } else {
-            return ci.addMethod(restfullType, methodPath, method);
         }
     }
 
-    public ControllerMethod doMatchingPath(String controllerPath, String methodPath, HttpMethodEnum restfullType) {
+    public ControllerMethod doMatchingPath(MatchedController matchedController, HttpMethodEnum restfullType) {
         ControllerMethod result = null;
-        ControllerWrapper ci = pathTreeMap.get(controllerPath);
+        ControllerWrapper ci = matchedController.getControllerWrapper();
+        String methodPath = matchedController.getMethodPath();
         if (ci != null) {
             if (restfullType == HttpMethodEnum.POST) {//POST请求
                 Method m = ci.getMatchedPostMethod(methodPath);
                 if (m != null) {
                     result = new ControllerMethod(ci.getControllerObject(), m);
-                    return result;
                 }
             } else {//GET请求
                 Method m = ci.getMatchedGetMethod(methodPath);
                 if (m != null) {
                     result = new ControllerMethod(ci.getControllerObject(), m);
-                    return result;
                 }
             }
         }
 
-        return result;
+        if (result != null) {
+            result.setContainUriParameters(matchedController.isContainUriParameters());
+            result.setUriParametersPath(matchedController.getUriParametersPath());
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 这个方法，默认认为请求URL是不包含URI参数的精确匹配
+     */
+    public ControllerMethod doMatchingPath(String controllerPath, String methodPath, HttpMethodEnum restfullType) {
+        ControllerWrapper ci = pathTreeMap.get(controllerPath);
+        MatchedController matchedController = new MatchedController();
+        matchedController.setControllerWrapper(ci);
+        matchedController.setMethodPath(methodPath);
+        matchedController.setContainUriParameters(false);
+
+        return doMatchingPath(matchedController, restfullType);
+    }
+
+    /**
+     * 根据URI查询控制器方法
+     *
+     * @param uri 不包括上下文路径的URI，如：open/article/123，包括URI参数部分
+     **/
+    public ControllerMethod doMatchingPath(String uri, HttpMethodEnum restfullType) {
+        ControllerMethod result = null;
+        ControllerWrapper ci = null;
+        String methodPath = null;
+        List<MatchedController> bestControllerPathList = new ArrayList<MatchedController>();
+        for (Map.Entry<String, ControllerWrapper> entry : pathTreeMap.entrySet()) {
+            if (uri.startsWith(entry.getKey())) {
+                boolean containUriParameters;
+                String uriParametersPath = null;
+                if (uri.length() - entry.getKey().length() >= 2) {
+                    String tempUri = StringUtils.removeStart(uri,entry.getKey() + "/");
+                    if(tempUri.contains("/") && !tempUri.startsWith("/")) {
+                        String methodPathInUri = tempUri.substring(0,tempUri.indexOf("/"));
+                        uriParametersPath = StringUtils.removeStart(tempUri, methodPathInUri + "/");
+                        containUriParameters = true;
+                    }else{
+                        containUriParameters = false;
+                    }
+                } else {
+                    containUriParameters = false;
+                }
+                bestControllerPathList.add(new MatchedController(containUriParameters,entry.getKey(), uriParametersPath));
+            }
+        }
+        if (!bestControllerPathList.isEmpty()) {
+            MatchedController matchedController;
+            if (bestControllerPathList.size() == 1) {
+                matchedController = bestControllerPathList.get(0);
+                ci = pathTreeMap.get(matchedController.getControllerPath());
+                methodPath = uri.substring(matchedController.getControllerPath().length() + 1).split("/")[0];
+                matchedController.setControllerWrapper(ci);
+                matchedController.setMethodPath(methodPath);
+            } else {//存在多个符合URI前缀的控制器，寻找最长符合的
+                MatchedController tempMatchedMC = new MatchedController();
+                for (MatchedController mc : bestControllerPathList) {
+                    int length = (tempMatchedMC.getControllerPath() != null ? tempMatchedMC.getControllerPath().length() : 0);
+                    if (mc.getControllerPath().length() > length) {
+                        tempMatchedMC = mc;
+                    }
+                }
+
+                ci = pathTreeMap.get(tempMatchedMC.getControllerPath());
+                methodPath = uri.substring(tempMatchedMC.getControllerPath().length() + 1).split("/")[0];
+                tempMatchedMC.setControllerWrapper(ci);
+                tempMatchedMC.setMethodPath(methodPath);
+                matchedController = tempMatchedMC;
+            }
+
+            ControllerMethod cm = doMatchingPath(matchedController, restfullType);
+
+            return cm;
+        } else {
+            logger.error("### 错误：找不到匹配的注册控制器");
+            return null;
+        }
     }
 
     public ResourceLoader getResourceLoader() {

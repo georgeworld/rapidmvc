@@ -92,6 +92,7 @@ public class FrontServlet extends HttpServlet {
         ResultWrapper result = action.doProcess(httpRequest, httpResponse);
         if (!result.isSuccess()) {
             logger.error("## The page you requested can't be processed[" + result.getRequestPath().getUriWithQueryString() + "]");
+            logger.error("### Error info:"+result.getMessage());
 //            httpRequest.setAttribute("requestedUrl", path.getUriWithQueryString());
 //            httpRequest.getRequestDispatcher("/WEB-INF/sysview/not-found.jsp").forward(request, response);
 

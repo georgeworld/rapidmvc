@@ -4,20 +4,16 @@
  */
 package com.georgeinfo.rapidmvc.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
- * 表明所注解的方法可用于处理HTTP PUT请求。
+ * 控制器方法的入参注解
  *
  * @author George <GeorgeNiceWorld@gmail.com>
  */
-@Target({ElementType.METHOD})
+@Target({ElementType.FIELD,ElementType.METHOD,ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Put {
+public @interface Param {
     public String value() default "";
 }

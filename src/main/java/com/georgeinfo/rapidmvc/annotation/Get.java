@@ -19,4 +19,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Get {
+    public String value() default "";
 }
