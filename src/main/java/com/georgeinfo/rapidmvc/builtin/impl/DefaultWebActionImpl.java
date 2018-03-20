@@ -4,17 +4,12 @@
  */
 package com.georgeinfo.rapidmvc.builtin.impl;
 
+import com.georgeinfo.rapidmvc.*;
 import com.georgeinfo.rapidmvc.api.WebAction;
 import com.georgeinfo.rapidmvc.api.PathTree;
 import com.georgeinfo.base.util.logger.GeorgeLogger;
-import com.georgeinfo.rapidmvc.Controller;
-import com.georgeinfo.rapidmvc.ControllerMethod;
-import com.georgeinfo.rapidmvc.HttpMethodEnum;
 import com.georgeinfo.rapidmvc.api.LoginInterceptor;
 import com.georgeinfo.rapidmvc.RenderProcessor;
-import com.georgeinfo.rapidmvc.RequestPath;
-import com.georgeinfo.rapidmvc.ResultWrapper;
-import com.georgeinfo.rapidmvc.ThreadLocalContainer;
 import com.georgeinfo.rapidmvc.exception.WrongPathFormatException;
 import com.georgeinfo.rapidmvc.support.AcHelper;
 import gbt.config.GeorgeLoggerFactory;
@@ -22,6 +17,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -94,14 +90,14 @@ public class DefaultWebActionImpl implements WebAction {
 
         //从访问URL中，提取控制器方法访问要素 结束
 
-        ControllerMethod cm = null;
+        ExecutableMethod em = null;
         HttpMethodEnum requestMethodType;
 //        if (httpMethod.equals(HttpMethodEnum.POST.name())) {
 //            requestMethodType = HttpMethodEnum.POST;
-//            cm = pathTree.doMatchingPath(controllerPath, methodPath, requestMethodType);
+//            em = pathTree.doMatchingPath(controllerPath, methodPath, requestMethodType);
 //        } else {
 //            requestMethodType = HttpMethodEnum.GET;
-//            cm = pathTree.doMatchingPath(controllerPath, methodPath, requestMethodType);
+//            em = pathTree.doMatchingPath(controllerPath, methodPath, requestMethodType);
 //        }
 
         if (httpMethod.equals(HttpMethodEnum.POST.name())) {
@@ -109,45 +105,21 @@ public class DefaultWebActionImpl implements WebAction {
         } else {
             requestMethodType = HttpMethodEnum.GET;
         }
-        cm = pathTree.doMatchingPath(realUri, requestMethodType);
+        em = pathTree.doMatchingPath(realUri, requestMethodType);
 
 
-        if (cm != null) {
-            Controller controller = cm.getController();
+        if (em != null) {
+            Controller controller = em.getController();
             //注入本次请求所产生的request和response对象（将本次请求的request和response对象，绑定到ThreadLocal上）
             controller.setRequest(request);
             controller.setResponse(response);
             //将AcHelper绑定到ThreadLocal上
             controller.setAcHelper(new AcHelper(request));
 
-            Method controllerMethod = cm.getMethod();
-
-            //提取URI参数值 开始
-            String[] uriParameters = null;
-            if (cm.isContainUriParameters() == true) {
-                if (controllerMethod.getParameterTypes() != null && controllerMethod.getParameterTypes().length > 0) {
-                    //说明，此控制器方法的http注解中，填充了URI参数
-                    //uriParameters = new String[pathSubsection.length - 3];
-                    //讲http请求的URL中，http参数提取到一个参数数组中
-                    //System.arraycopy(pathSubsection, 3, uriParameters, 0, pathSubsection.length - 3);
-
-                    uriParameters = cm.getUriParametersPath().split("/");
-                } else {
-                    //URL请求中带有URI参数，但是对应的控制器方法中，没有定义方法入参，所以要报错
-                    return result.error().setMessage("错误：控制器方法没有定义与URI参数匹配的入参");
-                }
-
-            }
-            //提取URI参数值 结束
-
             try {
                 //找到了控制器方法，执行方法
                 boolean r;
-                if (ArrayUtils.isEmpty(uriParameters)) {
-                    r = RenderProcessor.execute(controller, controllerMethod, requestMethodType);
-                } else {
-                    r = RenderProcessor.execute(controller, controllerMethod, uriParameters, requestMethodType);
-                }
+                    r = RenderProcessor.execute(em, requestMethodType);
                 if (r) {
                     result.success();
                 } else {

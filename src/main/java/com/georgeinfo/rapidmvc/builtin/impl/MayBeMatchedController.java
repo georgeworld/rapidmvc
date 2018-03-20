@@ -7,32 +7,30 @@ package com.georgeinfo.rapidmvc.builtin.impl;
 import com.georgeinfo.rapidmvc.ControllerWrapper;
 
 /**
- * 根据访问的URI，找到的合适控制器的主要信息容器类
+ * 根据访问的URI，找到的可能合适的控制器的主要信息容器类
  *
  * @author George <GeorgeWorld@qq.com>
  */
-public class MatchedController {
+public class MayBeMatchedController {
     private ControllerWrapper controllerWrapper;
-    private String methodPath;
     private boolean containUriParameters = false;
     private String controllerPath;
     /**
-     * URI参数路径，格式如：edit/123/990
+     * 控制器方法及URI参数部分的路径，格式如：edit/123/990
      */
-    private String uriParametersPath;
+    private String methodNameAndParametersUri;
 
-    public MatchedController() {
+    public MayBeMatchedController() {
     }
 
-    public MatchedController(boolean containUriParameters, String controllerPath,String uriParametersPath) {
-        this.containUriParameters = containUriParameters;
+    public MayBeMatchedController(String controllerPath, String methodNameAndParametersUri) {
         this.controllerPath = controllerPath;
-        this.uriParametersPath = uriParametersPath;
+        this.methodNameAndParametersUri = methodNameAndParametersUri;
     }
 
-    public MatchedController(ControllerWrapper controllerWrapper, String methodPath, boolean containUriParameters) {
+
+    public MayBeMatchedController(ControllerWrapper controllerWrapper, boolean containUriParameters) {
         this.controllerWrapper = controllerWrapper;
-        this.methodPath = methodPath;
         this.containUriParameters = containUriParameters;
     }
 
@@ -43,14 +41,6 @@ public class MatchedController {
 
     public void setControllerWrapper(ControllerWrapper controllerWrapper) {
         this.controllerWrapper = controllerWrapper;
-    }
-
-    public String getMethodPath() {
-        return methodPath;
-    }
-
-    public void setMethodPath(String methodPath) {
-        this.methodPath = methodPath;
     }
 
     public boolean isContainUriParameters() {
@@ -69,11 +59,11 @@ public class MatchedController {
         this.controllerPath = controllerPath;
     }
 
-    public String getUriParametersPath() {
-        return uriParametersPath;
+    public String getMethodNameAndParametersUri() {
+        return methodNameAndParametersUri;
     }
 
-    public void setUriParametersPath(String uriParametersPath) {
-        this.uriParametersPath = uriParametersPath;
+    public void setMethodNameAndParametersUri(String methodNameAndParametersUri) {
+        this.methodNameAndParametersUri = methodNameAndParametersUri;
     }
 }

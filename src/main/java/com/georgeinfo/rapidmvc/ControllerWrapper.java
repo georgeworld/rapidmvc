@@ -5,7 +5,11 @@
 package com.georgeinfo.rapidmvc;
 
 import com.georgeinfo.base.util.logger.GeorgeLogger;
+import com.georgeinfo.rapidmvc.dependents.uri.UriTemplate;
+import com.georgeinfo.rapidmvc.exception.RapidMvcException;
 import gbt.config.GeorgeLoggerFactory;
+import org.apache.commons.lang3.StringUtils;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +23,10 @@ public class ControllerWrapper {
 
     private static final GeorgeLogger logger = GeorgeLoggerFactory.getLogger(ControllerWrapper.class);
     private Controller controllerObject;
+    /**
+     * 控制器所对应的path uri部分
+     */
+    private String controllerPath;
     /**
      * 控制器方法全名称，与控制器器方法本身的映射map，key=控制器类全路径#方法名称，value=方法反射对象
      *
@@ -36,8 +44,17 @@ public class ControllerWrapper {
      */
     private final Map<String, String> getMethodPathMap = new HashMap<String, String>();
 
-    public ControllerWrapper(Controller controllerObject) {
+    public ControllerWrapper(String controllerPath, Controller controllerObject) {
+        this.controllerPath = controllerPath;
         this.controllerObject = controllerObject;
+    }
+
+    public String getControllerPath() {
+        return controllerPath;
+    }
+
+    public void setControllerPath(String controllerPath) {
+        this.controllerPath = controllerPath;
     }
 
     public Controller getControllerObject() {
@@ -60,7 +77,7 @@ public class ControllerWrapper {
         return getMethodPathMap;
     }
 
-    public boolean addMethod(HttpMethodEnum restType, String methodPath, Method method) {
+    public boolean addMethod(HttpMethodEnum restType, String methodPath, String methodNamePath, Method method) {
         if (methodPath != null && !methodPath.trim().isEmpty() && method != null) {
             String methodName = controllerObject.getClass().getName() + "#" + method.getName();
 
@@ -104,21 +121,63 @@ public class ControllerWrapper {
         }
     }
 
-    public Method getMatchedPostMethod(String methodPath) {
-        String methodName = postMethodPathMap.get(methodPath);
-        if (methodName != null) {
-            return methodNameMap.get(methodName);
+    public ExecutableMethod getMatchedMethod(String methodNameAndParametersUri, HttpMethodEnum httpMethodEnum) {
+        ExecutableMethod result = null;
+
+        Map<String, String> parameters = new HashMap<>();
+        String fullMethodName = null;
+        Map<String, String> methodAnnotationFullMethodNameMap = null;
+        if (httpMethodEnum == HttpMethodEnum.POST) {
+            methodAnnotationFullMethodNameMap = postMethodPathMap;
+        } else if (httpMethodEnum == HttpMethodEnum.GET) {
+            methodAnnotationFullMethodNameMap = getMethodPathMap;
         } else {
+            throw new RapidMvcException("## Unsupported HTTP request method:" + httpMethodEnum.name());
+        }
+
+        methodNameAndParametersUri = methodNameAndParametersUri.trim();
+        for (Map.Entry<String, String> e : methodAnnotationFullMethodNameMap.entrySet()) {
+            String annotationUriTemplate = e.getKey().trim();
+            if (annotationUriTemplate.startsWith("/") && !methodNameAndParametersUri.startsWith("/")) {
+                methodNameAndParametersUri = "/" + methodNameAndParametersUri;
+            }
+            if (methodNameAndParametersUri.startsWith("/") && !annotationUriTemplate.startsWith("/")) {
+                methodNameAndParametersUri = StringUtils.removeStart(methodNameAndParametersUri, "/");
+            }
+
+            UriTemplate uriTemplate = new UriTemplate(annotationUriTemplate);
+            boolean r = uriTemplate.match(methodNameAndParametersUri, parameters);
+            if (r == true) {
+                fullMethodName = e.getValue();
+                break;
+            }
+        }
+
+        if (fullMethodName != null && !fullMethodName.trim().isEmpty()) {
+            result = new ExecutableMethod(methodNameMap.get(fullMethodName), parameters);
+            result.setMethodNameAndParametersUri(methodNameAndParametersUri);
+            return result;
+        } else {
+            logger.error("## 找不到合适的控制器方法");
             return null;
         }
     }
 
-    public Method getMatchedGetMethod(String methodPath) {
-        String methodName = getMethodPathMap.get(methodPath);
-        if (methodName != null) {
-            return methodNameMap.get(methodName);
+    public ExecutableMethod getMatchedPostMethod(String methodNameAndParametersUri) {
+        return getMatchedMethod(methodNameAndParametersUri, HttpMethodEnum.POST);
+    }
+
+    public ExecutableMethod getMatchedGetMethod(String methodNameAndParametersUri) {
+        return getMatchedMethod(methodNameAndParametersUri, HttpMethodEnum.GET);
+    }
+
+    public Map<String, String> getControllerMethodAnnotationUri(HttpMethodEnum restfullType) {
+        if (restfullType == HttpMethodEnum.GET) {
+            return this.getMethodPathMap;
+        } else if (restfullType == HttpMethodEnum.POST) {
+            return this.postMethodPathMap;
         } else {
-            return null;
+            throw new RapidMvcException("## Unsupported HTTP request method.");
         }
     }
 }

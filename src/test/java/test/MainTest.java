@@ -9,8 +9,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.georgeinfo.rapidmvc.annotation.Param;
 import org.junit.After;
@@ -51,12 +52,19 @@ public class MainTest {
 
     }
 
+    @Test
+    public void name() throws Exception {
+    }
+
     // 单元测试方法在下面写
     @Test
     public void hello() throws NoSuchMethodException {
-        String url = "home/article/show/123";
-        String controllerPath = url.substring(0,url.indexOf("/"));
-        System.out.println("[" + controllerPath + "]");
-
+        String url = "home/{doType}/{p999}/8908/show";
+        String regex = "home\\/\\{(\\w+)\\}\\/\\{(\\w+)\\}\\/8908\\/show";
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(url);
+        while (m.find()) {
+            System.out.println(m.group());
+        }
     }
 }
