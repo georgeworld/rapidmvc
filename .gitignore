@@ -4,3 +4,6 @@ nbactions.xml
 out
 *.bat
 *.sh
+.settings
+.classpath
+.project
