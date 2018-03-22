@@ -11,6 +11,7 @@ import com.georgeinfo.base.util.network.HttpResponse;
 import com.georgeinfo.rapidmvc.annotation.Param;
 import com.georgeinfo.rapidmvc.exception.MissingHttpResponseException;
 import com.georgeinfo.rapidmvc.exception.NotSupportedRenderException;
+import com.georgeinfo.rapidmvc.exception.RapidMvcException;
 import com.georgeinfo.rapidmvc.render.FreeRender;
 import com.georgeinfo.rapidmvc.render.HtmlRender;
 import com.georgeinfo.rapidmvc.render.JsonRender;
@@ -28,6 +29,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
@@ -69,7 +73,7 @@ public class RenderProcessor {
             Map<String, String> parametersInAnnotation,
             Object[] parameterValues,
             Class<?>[] parameterTypes,
-            ExecutableMethod em) {
+            ExecutableMethod em) throws ParseException {
         Parameter p = inParametersOfMethod[paramIndex];
         if (p.isNamePresent()) {//如果参数支持JDK1.8的参数机制
             String paramName = p.getName();
@@ -78,7 +82,8 @@ public class RenderProcessor {
             boolean invokeMethod = true;
             Object msg = null;
             if (paramValue != null) {
-                parameterValues[paramIndex] = paramValue;
+                Object pv = paramTypeConvert(parameterTypes, paramValue, paramIndex, "yyyy-MM-dd HH:mm:ss");
+                parameterValues[paramIndex] = pv;
             } else {
                 boolean r = builtInParametersSetting(
                         parameterTypes,
@@ -158,7 +163,9 @@ public class RenderProcessor {
                             String paramName = paramAnnotation.value();
                             String paramValue = parametersInAnnotation.get(paramName);
                             if (paramValue != null) {
-                                parameterValues[paramIndex] = paramValue;
+                                //对方法参数进行类型判断
+                                Object pv = paramTypeConvert(parameterTypes, paramValue, paramIndex, paramAnnotation.format());
+                                parameterValues[paramIndex] = pv;
                             } else {//入参上添加了@Param注解，但是并不是控制器方法上，@Get/@Post注解中的URI参数
                                 //判断入参是否是内置支持的类型
                                 boolean r = builtInParametersSetting(
@@ -386,5 +393,27 @@ public class RenderProcessor {
         }
 
         return true;
+    }
+
+    private static Object paramTypeConvert(Class<?>[] parameterTypes, String paramValue, int paramIndex, String format) throws ParseException {
+        Class<?> paramType = parameterTypes[paramIndex];
+        Object pv = null;
+        if (paramType == String.class) {
+            pv = paramValue;
+        } else if (paramType == int.class || paramType == Integer.class) {
+            pv = Integer.parseInt(paramValue);
+        } else if (paramType == long.class || paramType == Long.class) {
+            pv = Long.parseLong(paramValue);
+        } else if (paramType == Date.class) {
+            SimpleDateFormat sdf = new SimpleDateFormat(format);
+            pv = sdf.parse(paramValue);
+        } else if (paramType == short.class || paramType == Short.class) {
+            pv = Short.parseShort(paramValue);
+        } else if (paramType == boolean.class || paramType == Boolean.class) {
+            pv = Boolean.parseBoolean(paramValue);
+        } else {
+            throw new RapidMvcException("## Parameter type [" + paramType + "]  are not supported.");
+        }
+        return pv;
     }
 }

@@ -11,9 +11,11 @@ import java.lang.annotation.*;
  *
  * @author George <GeorgeNiceWorld@gmail.com>
  */
-@Target({ElementType.FIELD,ElementType.METHOD,ElementType.PARAMETER})
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Param {
     public String value() default "";
+
+    public String format() default "yyyy-MM-dd HH:mm:ss";
 }
