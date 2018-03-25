@@ -7,7 +7,7 @@
   &nbsp;&nbsp;&nbsp;&nbsp;如果您要做一个微型项目，不需要太多花哨的功能，也不想依赖太多的第三方类库，可以使用本框架来试一下。<br>  
   ![image](https://raw.githubusercontent.com/georgeworld/georgeworld.github.com/master/rapidmvc/img/docimg/RapidMVC-design.png) <br> 
 # Rapid MVC 演示项目
-  &nbsp;&nbsp;&nbsp;&nbsp;演示项目在[这里](https://github.com/georgeworld/rapidmvc-demo)，同时，[这里](http://www.georgeinfo.com/blog/open/welcome)也是使用Rapid MVC框架来开发的，欢迎光临。
+  &nbsp;&nbsp;&nbsp;&nbsp;演示项目在[这里](https://github.com/georgeworld/rapidmvc-demo)，同时，老乔的博客：[老乔在探索](http://www.georgeinfo.com/blog/open/welcome)也是使用Rapid MVC框架来开发的，欢迎光临。
 # 参与及讨论
   &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入《互联网软件之家》QQ群：[693203950](//shang.qq.com/wpa/qunwpa?idkey=61c4589ea5618ae46d063f94cbd9394de290dd39ef46fca059a4309b8c1d7874)<br>  
   ![image](https://raw.githubusercontent.com/georgeworld/georgeworld.github.com/master/gstudio/res/img/qq_group.png) <br> 
