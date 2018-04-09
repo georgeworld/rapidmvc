@@ -14,6 +14,7 @@ import com.georgeinfo.rapidmvc.exception.WrongPathFormatException;
 import com.georgeinfo.rapidmvc.support.AcHelper;
 import gbt.config.GeorgeLoggerFactory;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
@@ -42,10 +43,16 @@ public class DefaultWebActionImpl implements WebAction {
         RequestPath path = new RequestPath(request);
         result.setRequestPath(path);
         String uri = path.getUri();
+        if (uri != null && !uri.trim().isEmpty() && uri.endsWith("/")) {
+            uri = StringUtils.removeEnd(uri, "/");
+        }
 
         if (li != null) {
             if (!li.checkLogin(uri, request, response)) {
-                return result;
+                String tempUri = uri + "/";
+                if (!li.checkLogin(tempUri, request, response)) {
+                    return result;
+                }
             }
         }
 
@@ -119,7 +126,7 @@ public class DefaultWebActionImpl implements WebAction {
             try {
                 //找到了控制器方法，执行方法
                 boolean r;
-                    r = RenderProcessor.execute(em, requestMethodType);
+                r = RenderProcessor.execute(em, requestMethodType);
                 if (r) {
                     result.success();
                 } else {
